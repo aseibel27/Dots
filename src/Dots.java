@@ -1,73 +1,79 @@
 import processing.core.PApplet;
 import processing.core.PVector;
+
 // import processing.core.*;
 
 public class Dots extends PApplet{
-
+    // main program creates window
     public static void main(String[] args) {
         PApplet.main("Dots");
     }
-    
+
+    // changes window size
     public void settings() {
         size(640, 360);
     }
 
+    // creates two objects of class Ball(PApplet parent, x, y, r)
     Ball[] balls =  { 
-        new Ball(this, 100, 400, 20), 
-        new Ball(this, 700, 400, 80) 
+        new Ball(this, 100, 400, 20, new int[] {255,0,0}), 
+        new Ball(this, 700, 400, 25, new int[] {0,255,0}),
+        new Ball(this, 400, 400, 30, new int[] {0,0,255}),
+        new Ball(this, 400, 100, 15, new int[] {0,0,0})
       };  
-
+    
+    // sets outline and fill colors
     public void setup() {
-        noStroke();
-        fill(204, 204, 204);
+        noStroke(); // default disabled outline
+        fill(204, 204, 204); // default color
     }
     
+    // draws background, redraws Balls
     public void draw() {
-        background(51);
+        background(255); // background color
         
+        // for each ball
         for (Ball b : balls) {
-            b.update();
-            b.display();
-            b.checkBoundaryCollision();
+            b.update(); // update position, velocity
+            b.display(b.color,b.viewRadius,b.viewAngle,b.viewColor); // redraw
+            b.checkBoundaryCollision(); // update velocity upon boundary collision
         }
-        
-        balls[0].checkCollision(balls[1]);
+        // check if 1st ball collides with 2nd ball
+        for (int i = 0; i<balls.length; i++){
+            for (int j = balls.length-1; j>i; j--){
+                balls[i].checkCollision(balls[j]);
+            }  
+        } 
     }
-
-
-    // public void settings(){
-    //     size(640, 480);
-    // }
-
-    // public void setup(){
-    //     fill(120,50,240);
-    // }
-
-    // public void draw(){
-    //     ellipse(width/2,height/2,second(),second());
-    // }
 }
 
 class Ball {
     PApplet parent;
-    PVector position;
-    PVector velocity;
+    PVector position, velocity;
+    int color, viewColor;
+    float radius, m, viewRadius, viewAngle;
+    final double PI = 3.1415926536;
   
-    float radius, m;
-  
-    Ball(PApplet p, float x, float y, float r_) {
-      parent = p;
-      position = new PVector(x, y);
-      velocity = PVector.random2D();
-      velocity.mult(3);
-      radius = r_;
-      m = radius*.1f;
+    Ball(PApplet p, float x, float y, float r_, int[] c) {
+      parent = p; // make ball a child of pApplet
+      position = new PVector(x, y); // set position to specified x and y
+      velocity = PVector.random2D(); // unit vector random direction
+      velocity.mult(3); // magnify velocity
+      radius = r_; // set specified radius
+      m = radius*.1f; // momentum?
+      color = parent.color(c[0],c[1],c[2]);
+      viewColor = parent.color(c[0],c[1],c[2],100);
+      viewRadius = 2f*radius;
+      viewAngle = 60f*(float)PI/180;
     }
-  
+    
+    // update ball's velocity at given time step
     public void update() {
       position.add(velocity);
     }
-  
+    
+    // if ball escapes window boundary, set position
+    // to boundary and flip velocity
     public void checkBoundaryCollision() {
       if (position.x > parent.width-radius) {
         position.x = parent.width-radius;
@@ -179,7 +185,10 @@ class Ball {
       }
     }
   
-    public void display() { 
+    public void display(int color, float vr, float va, int vColor) { 
+        parent.fill(color);
         parent.ellipse(position.x, position.y, radius*2, radius*2);
+        parent.fill(vColor);
+        parent.arc(position.x,position.y,vr*2,vr*2,velocity.heading()-va/2,velocity.heading()+va/2);
     }
   }
