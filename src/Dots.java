@@ -16,21 +16,26 @@ public class Dots extends PApplet{
 
     // creates two objects of class Ball(PApplet parent, x, y, r)
     Ball[] balls =  { 
-        new Ball(this, 100, 400, 20, new int[] {255,0,0}), 
+        new Ball(this, 100, 300, 20, new int[] {255,0,0}), 
         new Ball(this, 700, 400, 25, new int[] {0,255,0}),
         new Ball(this, 400, 400, 30, new int[] {0,0,255}),
         new Ball(this, 400, 100, 15, new int[] {0,0,0})
-      };  
+    };  
     
     // sets outline and fill colors
     public void setup() {
         noStroke(); // default disabled outline
         fill(204, 204, 204); // default color
+        balls[0].velocity.x = 0;
+        balls[0].velocity.y = 0;
     }
     
     // draws background, redraws Balls
     public void draw() {
         background(255); // background color
+        
+        PVector agentVelocity = balls[0].velocity;
+        moveObj(agentVelocity);
         
         // for each ball
         for (Ball b : balls) {
@@ -38,12 +43,49 @@ public class Dots extends PApplet{
             b.display(b.color,b.viewRadius,b.viewAngle,b.viewColor); // redraw
             b.checkBoundaryCollision(); // update velocity upon boundary collision
         }
+        
         // check if 1st ball collides with 2nd ball
         for (int i = 0; i<balls.length; i++){
             for (int j = balls.length-1; j>i; j--){
                 balls[i].checkCollision(balls[j]);
             }  
         } 
+    }
+        
+    static boolean NORTH, SOUTH, WEST, EAST;
+
+    public void keyPressed() {
+      
+      redraw();   //  queue draw()
+      print("Fuck");
+      final int k = keyCode;
+          
+      if (k == UP    | k == 'W')   NORTH = true;
+      else if (k == DOWN  | k == 'S')   SOUTH = true;
+      else if (k == LEFT  | k == 'A')   WEST  = true;
+      else if (k == RIGHT | k == 'D')   EAST  = true;
+    }
+    
+    public void keyReleased() {
+      redraw();   //  queue draw()
+    
+      final int k = keyCode;
+    
+      if      (k == UP    | k == 'W')   NORTH = false;
+      else if (k == DOWN  | k == 'S')   SOUTH = false;
+      else if (k == LEFT  | k == 'A')   WEST  = false;
+      else if (k == RIGHT | k == 'D')   EAST  = false;
+    }
+
+    static void moveObj(PVector aVel) {
+      if (NORTH & aVel.y > -5) aVel.y -= 1;
+      else if (!NORTH & aVel.y < 0) aVel.y *= 0.9;
+      if (SOUTH & aVel.y < 5)  aVel.y += 1;
+      else if (!SOUTH & aVel.y > 0) aVel.y *= 0.9;
+      if (WEST & aVel.x > -5)  aVel.x -= 1;
+      else if (!WEST & aVel.x < 0) aVel.x *= 0.9;
+      if (EAST & aVel.x < 5)   aVel.x += 1;
+      else if (!EAST & aVel.x > 0) aVel.x *= 0.9;
     }
 }
 
@@ -58,7 +100,7 @@ class Ball {
       parent = p; // make ball a child of pApplet
       position = new PVector(x, y); // set position to specified x and y
       velocity = PVector.random2D(); // unit vector random direction
-      velocity.mult(3); // magnify velocity
+      velocity.mult(3); // set velocity magnitude
       radius = r_; // set specified radius
       m = radius*.1f; // momentum?
       color = parent.color(c[0],c[1],c[2]);
@@ -184,7 +226,7 @@ class Ball {
         other.velocity.y = cosine * vFinal[1].y + sine * vFinal[1].x;
       }
     }
-  
+    
     public void display(int color, float vr, float va, int vColor) { 
         parent.fill(color);
         parent.ellipse(position.x, position.y, radius*2, radius*2);
