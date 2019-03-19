@@ -33,7 +33,8 @@ public class Dots extends PApplet{
         background(255); // background color
         
         PVector agentVelocity = balls[0].velocity;
-        moveObj(agentVelocity);
+        PVector agentOrientation = balls[0].orientation;
+        moveObj(agentVelocity,agentOrientation);
         
         // for each ball
         for (Ball b : balls) {
@@ -76,17 +77,41 @@ public class Dots extends PApplet{
     }
 // need to add both orientation and velocity vectors
     static float speed, minSpeed = 0.5f, maxSpeed = 10f, rotSpeed = 0.07f, friction = 0.9f, accel = 1.2f;
-    
-    void moveObj(PVector aVel) {
+    static PVector tempVec;
+
+    static void moveObj(PVector aVel, PVector aOrient) {
+      tempVec = PVector.random2D().mult(0);
       speed = aVel.mag();
-      if (FORWARD & speed < minSpeed ) aVel.normalize().mult(minSpeed);
-      else if (FORWARD & speed >= minSpeed & aVel.mag() < maxSpeed) aVel.mult(accel);
-      else if (FORWARD & speed >= maxSpeed) aVel.normalize().mult(maxSpeed);
-      else if (!FORWARD & speed > 0) aVel.mult(friction);
-      if (TURNLEFT)  aVel.rotate(-rotSpeed);
-      if (TURNRIGHT) aVel.rotate(rotSpeed);
-      if (FORWARD | TURNRIGHT | TURNLEFT) balls[0].orientation=balls[0].velocity;
-     }
+      if (TURNLEFT)  aOrient.rotate(-rotSpeed);
+      else if (TURNRIGHT) aOrient.rotate(rotSpeed); 
+      if (FORWARD & (speed < minSpeed) ){
+        tempVec.x = aOrient.x;
+        tempVec.y = aOrient.y;
+        tempVec.mult(minSpeed);
+        aVel.x += tempVec.x;
+        aVel.y += tempVec.y;
+        speed = aVel.mag();
+        print(speed);
+        print("\n");
+      } 
+      
+      if (FORWARD & (speed >= minSpeed) & speed <= maxSpeed){
+        tempVec.x = aOrient.x;
+        tempVec.y = aOrient.y;
+        tempVec.mult(accel);
+        aVel.x += tempVec.x;
+        aVel.y += tempVec.y;
+        print("Fuck");
+        print("\n");
+      } 
+      else if (FORWARD & (speed > maxSpeed)){
+        tempVec = aVel;
+        tempVec.normalize();
+        tempVec.mult(maxSpeed);
+        aVel = tempVec;
+      } 
+      else if (!FORWARD & (speed > 0)) aVel.mult(friction);
+    }
 }
 
 class Ball {
@@ -121,13 +146,13 @@ class Ball {
       if (position.x > parent.width-radius) {
         position.x = parent.width-radius;
         velocity.x *= -1;
-      } else if (position.x < radius) {
+      } if (position.x < radius) {
         position.x = radius;
         velocity.x *= -1;
-      } else if (position.y > parent.height-radius) {
+      } if (position.y > parent.height-radius) {
         position.y = parent.height-radius;
         velocity.y *= -1;
-      } else if (position.y < radius) {
+      } if (position.y < radius) {
         position.y = radius;
         velocity.y *= -1;
       }
@@ -232,6 +257,6 @@ class Ball {
         parent.fill(color);
         parent.ellipse(position.x, position.y, radius*2, radius*2);
         parent.fill(viewColor);
-        parent.arc(position.x,position.y,viewRadius*2,viewRadius*2,velocity.heading()-viewAngle/2,velocity.heading()+viewAngle/2);
+        parent.arc(position.x,position.y,viewRadius*2,viewRadius*2,orientation.heading()-viewAngle/2,orientation.heading()+viewAngle/2);
     }
   }
