@@ -5,6 +5,8 @@ public class Ball {
     PApplet parent;
     PVector position, velocity;
     float rotation, radius, m, viewRadius, viewAngle;
+    float startTime, currentTime, attackTime = 200, cooldownTime = 200;
+    boolean ATTACKING, INITIATE_ATTACK, ATTACK_COOLDOWN;
     final float PI = 3.1415926536f;
     public static int[][] colors = {
         {168, 167, 122},// normal
@@ -35,6 +37,9 @@ public class Ball {
         m = radius*.1f; // momentum?
         viewRadius = 2f*radius;
         viewAngle = PI/3;
+        ATTACKING = false;
+        INITIATE_ATTACK = false;
+        ATTACK_COOLDOWN = false;
     }
     
     // update ball's velocity at given time step
@@ -49,20 +54,54 @@ public class Ball {
         accel = 0.5f;
     
     public void move() {
-        // TURNING
-        if (Application.TURNLEFT) {
-            rotation -= rotSpeed;
-        } else if (Application.TURNRIGHT) {
-            rotation += rotSpeed;
-        }
 
+        // ATTACK 
+        // initiate attack if key pressed, but only if not attacking or in cooldown
+        if (Application.ATTACK_KEY & !ATTACKING & !ATTACK_COOLDOWN) INITIATE_ATTACK = true;
+        // increase velocity upon initiating attack
+        if (INITIATE_ATTACK) {
+            velocity.x = 0f; velocity.y = 1f;
+            velocity.mult(3*maxSpeed).rotate(rotation);
+            INITIATE_ATTACK = false;
+            ATTACKING = true;
+            startTime = parent.millis();
+        }
+        // ATTACK remains true until attackTime is exceeded
+        // once attackTime is exceeded, attack stops and cooldown starts
+        if (ATTACKING) {
+            currentTime = parent.millis();
+            if (attackTime <= (currentTime-startTime)) {
+                velocity.mult(0);
+                ATTACKING = false;
+                ATTACK_COOLDOWN = true;
+                startTime = parent.millis();
+            }
+        }
+        // ATTACK_COOLDOWN remains true until cooldownTime exceeded
+        if (ATTACK_COOLDOWN) {
+            currentTime = parent.millis();
+            if (cooldownTime <= (currentTime-startTime)) {
+                ATTACK_COOLDOWN = false;
+            }
+        }
+        // can't turn if attacking
+        if (!ATTACKING) {
+            // TURNING
+            if (Application.TURNLEFT) {
+                rotation -= rotSpeed;
+            } else if (Application.TURNRIGHT) {
+                rotation += rotSpeed;
+            }
+        }
         // FORWARD
         speed = velocity.mag();
         if (Application.FORWARD) {
             velocity.x = 0f; velocity.y = 1f;
             speed += accel;
             if (speed > maxSpeed) {
-                speed = maxSpeed;
+                // don't limit max speed when attacking
+                if (ATTACKING) speed -= accel;
+                else speed = maxSpeed;
             }
             velocity.mult(speed).rotate(rotation);
         } else {

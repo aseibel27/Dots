@@ -4,7 +4,7 @@ public class Application extends PApplet {
     
     public World w;
     public Ball agent;
-    public static boolean FORWARD, BACKWARD, TURNRIGHT, TURNLEFT;
+    public static boolean ATTACK_KEY, FORWARD, BACKWARD, TURNRIGHT, TURNLEFT;
 
     public static void main(String[] args) {
         PApplet.main("Application");
@@ -20,8 +20,9 @@ public class Application extends PApplet {
         Assets.LoadAll();
         w = new World(this);
         w.AddDot(25);
-        w.AddDot(92);
-        w.AddDot(133);
+        w.AddDot(1);
+        w.AddDot(4);
+        w.AddDot(7);
         agent = w.dots.get(0);
     }
 
@@ -34,6 +35,7 @@ public class Application extends PApplet {
 
     public void keyPressed() {
         final int k = keyCode;
+        if (k == ' ' | k == ENTER | k == RETURN) ATTACK_KEY = true;
         if      (k == UP    | k == 'W')   FORWARD = true;
         else if (k == DOWN  | k == 'S')   BACKWARD = true;
         else if (k == LEFT  | k == 'A')   TURNLEFT  = true;
@@ -42,6 +44,7 @@ public class Application extends PApplet {
     
     public void keyReleased() {
         final int k = keyCode;
+        if (k == ' ' | k == ENTER | k == RETURN) ATTACK_KEY = false;
         if      (k == UP    | k == 'W')   FORWARD = false;
         else if (k == DOWN  | k == 'S')   BACKWARD = false;
         else if (k == LEFT  | k == 'A')   TURNLEFT  = false;
